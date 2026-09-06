@@ -6,17 +6,14 @@ import MaterialCommunityIcons from '@react-native-vector-icons/material-design-i
 import SizeButton from '../components/SizeButton/SizeButton';
 import CustomButton from '../components/CustomButton/CustomButton';
 import { useCart } from '../context/CartContext';
-import { products } from '../data/products';
 import { COLORS } from '../constants/colors';
 
 const CoffeeDetailsScreen = ({ route, navigation }) => {
-  const { productId } = route.params || {};
+  const { product } = route.params || {};
   const [selectedSize, setSelectedSize] = useState('Medium');
   const [quantity, setQuantity] = useState(1);
 
   const { addToCart } = useCart();
-
-  const product = products.find(item => item.id === productId);
 
   if (!product) {
     return (
@@ -25,8 +22,15 @@ const CoffeeDetailsScreen = ({ route, navigation }) => {
       </View>
     );
   }
+  const prices = {
+    Small: Number(product.smallPrice),
+    Medium: Number(product.mediumPrice),
+    Large: Number(product.largePrice),
+  };
 
-  const selectedPrice = product.prices[selectedSize];
+  const sizes = ['Small', 'Medium', 'Large'];
+
+  const selectedPrice = prices[selectedSize];
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -60,7 +64,15 @@ const CoffeeDetailsScreen = ({ route, navigation }) => {
             />
           </TouchableOpacity>
         </View>
-        <Image source={product.image} style={styles.image} resizeMode="cover" />
+        <Image
+          source={
+            typeof product.image === 'string'
+              ? { uri: product.image }
+              : product.image
+          }
+          style={styles.image}
+          resizeMode="cover"
+        />
 
         <View style={styles.info}>
           <View style={styles.titleRow}>
@@ -80,7 +92,7 @@ const CoffeeDetailsScreen = ({ route, navigation }) => {
           <Text style={styles.label}>Coffee size</Text>
 
           <View style={styles.sizes}>
-            {product.sizes.map(size => (
+            {sizes.map(size => (
               <SizeButton
                 key={size}
                 title={size}
@@ -139,48 +151,56 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
     padding: 16,
   },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 'auto',
     paddingTop: 8,
     marginBottom: 20,
   },
+
   image: {
     width: '100%',
     height: 280,
     borderRadius: 6,
   },
+
   info: {
     marginTop: 16,
   },
+
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+
   rating: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
+
   ratingText: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.primaryBrown,
     marginRight: 8,
   },
+
   title: {
     fontSize: 32,
     fontWeight: '600',
     color: COLORS.textPrimary,
   },
+
   description: {
     width: 265,
     fontSize: 16,
@@ -189,32 +209,37 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: COLORS.textSecondary,
   },
+
   label: {
     fontSize: 18,
     fontWeight: '600',
-    // marginTop: 20,
     marginBottom: 10,
     color: COLORS.textPrimary,
   },
+
   sizes: {
     flexDirection: 'row',
     gap: 8,
     marginTop: 8,
   },
+
   price: {
     fontSize: 24,
     fontWeight: '600',
     color: COLORS.textPrimary,
   },
+
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   error: {
     fontSize: 16,
     color: 'red',
   },
+
   quantityRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

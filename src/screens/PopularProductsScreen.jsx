@@ -1,30 +1,29 @@
 import { useEffect, useState } from 'react';
-import { fetchProducts } from '../api/api';
-
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 
-import { DrawerActions } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 
 import SearchInput from '../components/SearchInput/SearchInput';
-import CategoryCard from '../components/CategoryCard/CategoryCard';
 import HorizontalProductCard from '../components/HorizontalProductCard/HorizontalProductCard';
 
+import { fetchProducts } from '../api/api';
 import { SCREENS } from '../constants/screens';
 import { COLORS } from '../constants/colors';
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
-const MenuScreen = ({ navigation }) => {
-  const [apiProducts, setApiProducts] = useState([]);
+const PopularProductsScreen = ({ navigation }) => {
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,10 +35,12 @@ const MenuScreen = ({ navigation }) => {
 
         const data = await fetchProducts();
 
-        setApiProducts(data);
+        const popularProducts = data.filter(product => product.popular);
+
+        setProducts(popularProducts);
       } catch (err) {
         setError('Failed to load products');
-        console.log('API ERROR:', err);
+        console.log('POPULAR PRODUCTS ERROR:', err);
       } finally {
         setLoading(false);
       }
@@ -47,6 +48,10 @@ const MenuScreen = ({ navigation }) => {
 
     loadProducts();
   }, []);
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   if (loading) {
     return (
@@ -68,76 +73,35 @@ const MenuScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FlatList
-        data={apiProducts}
+        data={filteredProducts}
         keyExtractor={(item, index) =>
           item?.id ? String(item.id) : String(index)
         }
+        ItemSeparatorComponent={ItemSeparator}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-        ItemSeparatorComponent={ItemSeparator}
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <TouchableOpacity
-                onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-              >
+              <TouchableOpacity onPress={() => navigation.goBack()}>
                 <MaterialCommunityIcons
-                  name="menu"
-                  size={22}
+                  name="chevron-left"
+                  size={30}
                   color={COLORS.textPrimary}
                 />
               </TouchableOpacity>
 
-              <Text style={styles.headerTitle}>Menu</Text>
+              <Text style={styles.headerTitle}>Popular products</Text>
 
-              <TouchableOpacity
-                onPress={() => navigation.navigate(SCREENS.CART)}
-              >
-                <MaterialCommunityIcons
-                  name="cart-outline"
-                  size={22}
-                  color={COLORS.textPrimary}
-                />
-              </TouchableOpacity>
+              <View style={styles.headerPlaceholder} />
             </View>
 
             <SearchInput
               placeholder="Search for coffee..."
-              onChangeText={() => {}}
+              onChangeText={setSearch}
             />
 
-            <View style={styles.categories}>
-              <CategoryCard
-                title="Hot coffee"
-                image={require('../assets/images/categories/hot_coffee.png')}
-                onPress={() =>
-                  navigation.navigate(SCREENS.CATEGORY_PRODUCTS, {
-                    category: 'hot',
-                  })
-                }
-              />
-              <CategoryCard
-                title="Cold coffee"
-                image={require('../assets/images/categories/cold_coffee.png')}
-                onPress={() =>
-                  navigation.navigate(SCREENS.CATEGORY_PRODUCTS, {
-                    category: 'cold',
-                  })
-                }
-              />
-
-              <CategoryCard
-                title="Iced drinks"
-                image={require('../assets/images/categories/iced_drinks.png')}
-                onPress={() =>
-                  navigation.navigate(SCREENS.CATEGORY_PRODUCTS, {
-                    category: 'iced',
-                  })
-                }
-              />
-            </View>
-
-            <Text style={styles.sectionTitle}>Coffee menu</Text>
+            <Text style={styles.sectionTitle}>Popular products</Text>
           </>
         }
         renderItem={({ item }) => (
@@ -167,38 +131,36 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
-  separator: {
-    height: 16,
-  },
+
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 28,
   },
 
-  categories: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: COLORS.textPrimary,
+  },
+
+  headerPlaceholder: {
+    width: 30,
   },
 
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.textPrimary,
-    marginTop: 18,
-    marginBottom: 12,
+    marginTop: 28,
+    marginBottom: 16,
+  },
+
+  separator: {
+    height: 16,
   },
 
   center: {
@@ -220,4 +182,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MenuScreen;
+export default PopularProductsScreen;

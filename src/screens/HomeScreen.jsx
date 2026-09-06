@@ -1,20 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerActions } from '@react-navigation/native';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 
+import { fetchProducts } from '../api/api';
 import SearchInput from '../components/SearchInput/SearchInput';
 import CategoryCard from '../components/CategoryCard/CategoryCard';
 import VerticalProductCard from '../components/VerticalProductCard/VerticalProductCard';
 
-import { products } from '../data/products';
 import { SCREENS } from '../constants/screens';
 import { COLORS } from '../constants/colors';
 
 const HomeScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
-  const popularProducts = products.filter(product => product.popular);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (error) {
+        console.log('HOME API ERROR:', error);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const popularProducts = products
+    .filter(product => product.popular)
+    .slice(0, 2);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -50,34 +67,54 @@ const HomeScreen = ({ navigation }) => {
         <CategoryCard
           title="Hot coffee"
           image={require('../assets/images/categories/hot_coffee.png')}
+          onPress={() =>
+            navigation.navigate(SCREENS.CATEGORY_PRODUCTS, {
+              category: 'hot',
+            })
+          }
         />
+
         <CategoryCard
           title="Cold coffee"
           image={require('../assets/images/categories/cold_coffee.png')}
+          onPress={() =>
+            navigation.navigate(SCREENS.CATEGORY_PRODUCTS, {
+              category: 'cold',
+            })
+          }
         />
+
         <CategoryCard
           title="Iced drinks"
           image={require('../assets/images/categories/iced_drinks.png')}
+          onPress={() =>
+            navigation.navigate(SCREENS.CATEGORY_PRODUCTS, {
+              category: 'iced',
+            })
+          }
         />
       </View>
 
       <View style={styles.popularHeader}>
         <Text style={styles.sectionTitle}>Popular products</Text>
-        <Text style={styles.seeAll}>See all</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate(SCREENS.POPULAR_PRODUCTS)}
+        >
+          <Text style={styles.seeAll}>See all</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.productsRow}>
-        {popularProducts.map(product => (
+        {popularProducts.map((product, index) => (
           <VerticalProductCard
-            key={product.id}
+            key={product?.id ? String(product.id) : `${product.name}-${index}`}
             title={product.name}
-            image={product.image}
-            price={`$${(product.prices?.Medium ?? product.price ?? 0).toFixed(
-              2,
-            )}`}
+            image={{ uri: product.image }}
+            price={`$${Number(product.mediumPrice).toFixed(2)}`}
             onPress={() =>
               navigation.navigate(SCREENS.COFFEE_DETAILS, {
                 productId: product.id,
+                product,
               })
             }
           />
@@ -111,13 +148,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: COLORS.textSecondary,
-    // marginTop: 36,
     marginBottom: 21,
   },
 
   categories: {
     flexDirection: 'row',
-    // justifyContent: 'space-between',
     gap: 12,
     width: '100%',
     marginTop: 20,
@@ -146,7 +181,6 @@ const styles = StyleSheet.create({
   productsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // gap: 16,
     width: '100%',
   },
 });

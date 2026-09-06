@@ -34,6 +34,7 @@ const CartScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
@@ -45,10 +46,6 @@ const CartScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Your cart</Text>
-
-        <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.editText}>Edit</Text>
-        </TouchableOpacity>
       </View>
 
       {cartItems.length === 0 ? (
@@ -61,7 +58,11 @@ const CartScreen = ({ navigation }) => {
             renderItem={({ item, index }) => (
               <View style={styles.cartItem}>
                 <Image
-                  source={item.image}
+                  source={
+                    typeof item.image === 'string'
+                      ? { uri: item.image }
+                      : item.image
+                  }
                   style={styles.image}
                   resizeMode="cover"
                 />
@@ -99,9 +100,7 @@ const CartScreen = ({ navigation }) => {
           <PromoCodeInput
             value={promoCode}
             onChangeText={setPromoCode}
-            onSubmit={() => {
-              console.log('Promo code:', promoCode);
-            }}
+            onSubmit={() => {}}
             placeholder="Add promo code"
           />
 
@@ -140,21 +139,23 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
   },
+
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    position: 'relative',
     alignItems: 'center',
     marginBottom: 20,
+  },
+
+  backButton: {
+    position: 'absolute',
+    left: 0,
   },
 
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-
-  editText: {
-    fontSize: 18,
     color: COLORS.textPrimary,
   },
 
